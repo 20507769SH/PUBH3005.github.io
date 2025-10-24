@@ -1,0 +1,158 @@
+<!-- 
+PUBH3005 Assessment 3: Dashboard with HTML/CSS/JavaScript
+Student: ____________________________   (Student ID: ____________)
+Due: Friday 25 October 2025, 4:00 PM WST
+Tech: Single self-contained HTML file (HTML/CSS/JS only). Uses Plotly.js.
+Data: Provided PUBH3005 assessment dataset (COVID vs pathology results).
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>interactive visualisation</title>
+  <script src=""></script>
+  <style>
+    body { background-color: darkseagreen; font-family: Arial, sans-serif; margin: 0; padding: 12px; }
+    p { text-align: center; margin: 6px 0; }
+    h1 { text-align: center; margin: 8px 0 4px; font-size: 22px; }
+    .controls { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin: 8px 0 12px; }
+    select { padding:6px 8px; font-size:14px; }
+    #myDiv, #myDiv2, #myDiv3 { height: 460px; max-width: 1100px; margin: 0 auto 12px; background: #ffffffcc; border-radius: 6px; }
+    .about { max-width: 1100px; margin: 0 auto 12px; background: #ffffffcc; border-radius: 6px; padding: 8px 10px; }
+    .about ul { max-width: 820px; margin: 6px auto; }
+  </style>
+</head>
+
+<body>
+
+  <h1>PUBH3005 – COVID vs Pathology (Weighted Means)</h1>
+
+  <div class="about">
+    <p><strong>What this shows:</strong> Weighted mean pathology measures by selected group (COVID / old / male / white).
+      Weights = <code>sample</code>. COVID is coded 0 = No, 1 = Yes.</p>
+    <p><strong>How to use:</strong> Pick a biomarker and a grouping variable. Chart 1 shows that biomarker by 0 vs 1.
+      Chart 2 shows all biomarkers by the same grouping. Chart 3 shows the gap (1 − 0) as bars across biomarkers.</p>
+    <ul>
+      <li>Biomarkers: Ferritin, Troponin, Neutrophils, Lymphocytes, CRP</li>
+      <li>Grouping: COVID, old, male, white</li>
+      <li>Weighted mean: Σ(value × sample) / Σ(sample)</li>
+    </ul>
+  </div>
+
+  <p>Select a biomarker</p>
+  <div class="controls">
+    <select id="biomarker">
+      <option value="Ferritin">Ferritin</option>
+      <option value="Troponin">Troponin</option>
+      <option value="Neutrophils">Neutrophils</option>
+      <option value="Lymphocytes">Lymphocytes</option>
+      <option value="CRP">CRP</option>
+    </select>
+
+    <select id="groupVar" title="Group by (0 vs 1)">
+      <option value="COVID">Group by: COVID</option>
+      <option value="old">Group by: old</option>
+      <option value="male">Group by: male</option>
+      <option value="white">Group by: white</option>
+    </select>
+  </div>
+
+  <div id="myDiv"></div>
+  <div id="myDiv2"></div>
+  <div id="myDiv3"></div>
+
+  <script>
+    const DATA = [
+      {"COVID":0,"old":0,"male":0,"white":0,"Ferritin":80.7962,"Troponin":15.0776,"Neutrophils":2.9622,"Lymphocytes":1.009,"CRP":72.698,"sample":88},
+      {"COVID":1,"old":0,"male":0,"white":0,"Ferritin":78.2594,"Troponin":14.5232,"Neutrophils":6.5465,"Lymphocytes":1.0095,"CRP":67.4789,"sample":23},
+      {"COVID":0,"old":1,"male":0,"white":0,"Ferritin":80.1051,"Troponin":15.0196,"Neutrophils":2.9655,"Lymphocytes":1.0044,"CRP":73.603,"sample":33},
+      {"COVID":1,"old":1,"male":0,"white":0,"Ferritin":79.1869,"Troponin":14.8105,"Neutrophils":21.2747,"Lymphocytes":0.6642,"CRP":76.098,"sample":38},
+      {"COVID":0,"old":0,"male":1,"white":0,"Ferritin":80.293,"Troponin":15.2164,"Neutrophils":2.9697,"Lymphocytes":1.0025,"CRP":85.2045,"sample":83},
+      {"COVID":1,"old":0,"male":1,"white":0,"Ferritin":82.4478,"Troponin":15.3914,"Neutrophils":11.2725,"Lymphocytes":0.86,"CRP":92.2727,"sample":24},
+      {"COVID":0,"old":1,"male":1,"white":0,"Ferritin":81.2627,"Troponin":15.1298,"Neutrophils":3.0922,"Lymphocytes":1.0068,"CRP":87.3127,"sample":35},
+      {"COVID":1,"old":1,"male":1,"white":0,"Ferritin":81.1032,"Troponin":15.2505,"Neutrophils":17.6567,"Lymphocytes":0.71,"CRP":85.317,"sample":64},
+      {"COVID":0,"old":0,"male":0,"white":1,"Ferritin":80.3315,"Troponin":15.1271,"Neutrophils":2.9658,"Lymphocytes":1.0038,"CRP":72.0842,"sample":468},
+      {"COVID":1,"old":0,"male":0,"white":1,"Ferritin":81.9102,"Troponin":14.701,"Neutrophils":8.5887,"Lymphocytes":0.9345,"CRP":74.6818,"sample":176},
+      {"COVID":0,"old":1,"male":0,"white":1,"Ferritin":80.7869,"Troponin":15.1487,"Neutrophils":3.0018,"Lymphocytes":0.9997,"CRP":76.5904,"sample":195},
+      {"COVID":1,"old":1,"male":0,"white":1,"Ferritin":81.2481,"Troponin":14.9856,"Neutrophils":20.0563,"Lymphocytes":0.6955,"CRP":77.0856,"sample":246},
+      {"COVID":0,"old":0,"male":1,"white":1,"Ferritin":80.5322,"Troponin":14.9284,"Neutrophils":2.9699,"Lymphocytes":1.0067,"CRP":84.4454,"sample":353},
+      {"COVID":1,"old":0,"male":1,"white":1,"Ferritin":80.7558,"Troponin":15.1274,"Neutrophils":9.952,"Lymphocytes":0.8898,"CRP":83.6312,"sample":190},
+      {"COVID":0,"old":1,"male":1,"white":1,"Ferritin":81.1269,"Troponin":15.0935,"Neutrophils":2.9539,"Lymphocytes":0.9993,"CRP":89.6938,"sample":133},
+      {"COVID":1,"old":1,"male":1,"white":1,"Ferritin":79.9424,"Troponin":14.9526,"Neutrophils":21.6836,"Lymphocytes":0.6442,"CRP":89.0144,"sample":241}
+    ];
+
+    const METRICS = ["Ferritin","Troponin","Neutrophils","Lymphocytes","CRP"];
+    const LABELS = {
+      COVID: {0: "COVID: No", 1: "COVID: Yes"},
+      old:   {0: "Old: No",    1: "Old: Yes"},
+      male:  {0: "Male: No",   1: "Male: Yes"},
+      white: {0: "White: No",  1: "White: Yes"}
+    };
+
+    function weightedMean(values, weights){
+      let num=0, den=0;
+      for(let i=0;i<values.length;i++){
+        const v=+values[i], w=+weights[i];
+        if(Number.isFinite(v)&&Number.isFinite(w)){ num += v*w; den += w; }
+      }
+      return den>0 ? num/den : NaN;
+    }
+
+    function meansByGroup(metric, groupVar){
+      const g0 = DATA.filter(r => +r[groupVar]===0);
+      const g1 = DATA.filter(r => +r[groupVar]===1);
+      const y0 = weightedMean(g0.map(r => +r[metric]), g0.map(r => +r.sample));
+      const y1 = weightedMean(g1.map(r => +r[metric]), g1.map(r => +r.sample));
+      return { y0, y1 };
+    }
+
+    function allMetricMeans(groupVar){
+      const g0 = DATA.filter(r => +r[groupVar]===0);
+      const g1 = DATA.filter(r => +r[groupVar]===1);
+      const means0 = METRICS.map(m => weightedMean(g0.map(r => +r[m]), g0.map(r => +r.sample)));
+      const means1 = METRICS.map(m => weightedMean(g1.map(r => +r[m]), g1.map(r => +r.sample)));
+      return { means0, means1 };
+    }
+
+    const biomarkerSel = document.getElementById("biomarker");
+    const groupSel = document.getElementById("groupVar");
+
+    function drawPlots(){
+      const metric = biomarkerSel.value;
+      const groupVar = groupSel.value;
+      const labels = LABELS[groupVar];
+
+      const {y0, y1} = meansByGroup(metric, groupVar);
+      const plot1 = [{type:"bar",x:[labels[0],labels[1]],y:[y0,y1],
+        hovertemplate:`<b>%{x}</b><br>${metric}: %{y:.3f}<extra></extra>`}];
+      const layout1={title:{text:`Weighted mean ${metric} by ${groupVar}`},yaxis:{title:metric}};
+      Plotly.newPlot("myDiv",plot1,layout1);
+
+      const {means0, means1} = allMetricMeans(groupVar);
+      const plot2=[
+        {type:"bar",name:labels[0],x:METRICS,y:means0,hovertemplate:`<b>%{x}</b><br>Mean: %{y:.3f}<extra>${labels[0]}</extra>`},
+        {type:"bar",name:labels[1],x:METRICS,y:means1,hovertemplate:`<b>%{x}</b><br>Mean: %{y:.3f}<extra>${labels[1]}</extra>`}
+      ];
+      const layout2={title:{text:`All biomarkers by ${groupVar} (weighted means)`},barmode:"group",yaxis:{title:"Weighted mean"},legend:{orientation:"h",y:-0.2}};
+      Plotly.newPlot("myDiv2",plot2,layout2);
+
+      // Plot 3 
+      const gaps = METRICS.map((m,i)=>means1[i]-means0[i]);
+      const plot3=[{type:"bar",x:METRICS,y:gaps,hovertemplate:`<b>%{x}</b><br>Gap (1−0): %{y:.3f}<extra></extra>`}];
+      const layout3={title:{text:`Gap in weighted means by ${groupVar} (1 − 0)`},yaxis:{title:"Difference in mean (group=1 − group=0)",zeroline:true}};
+      Plotly.newPlot("myDiv3",plot3,layout3);
+    }
+
+    drawPlots();
+    biomarkerSel.addEventListener("change",drawPlots);
+    groupSel.addEventListener("change",drawPlots);
+    window.addEventListener("resize",()=>{Plotly.Plots.resize("myDiv");Plotly.Plots.resize("myDiv2");Plotly.Plots.resize("myDiv3");});
+  
+ </script>
+
+</body>
+
+</html>
